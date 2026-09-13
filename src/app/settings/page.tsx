@@ -1,13 +1,16 @@
 "use client";
 
+import { useActionState } from "react";
+
+import { logout } from "@/app/login/actions";
 import { FormField } from "@/components/FormField";
 import { inputClass } from "@/components/form-styles";
 import { NavBar } from "@/components/NavBar";
 
+import { updatePassword } from "./actions";
+
 export default function Settings() {
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-  }
+  const [message, formAction, isPending] = useActionState(updatePassword, undefined);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -16,7 +19,7 @@ export default function Settings() {
         <h2 className="mb-4 text-sm font-medium text-black/60 dark:text-white/60">
           Change Password
         </h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form action={formAction} className="flex flex-col gap-4">
           <FormField label="Current Password">
             <input
               type="password"
@@ -44,15 +47,23 @@ export default function Settings() {
               className={inputClass}
             />
           </FormField>
+          {message ? <p className="text-sm text-black/70 dark:text-white/70">{message}</p> : null}
           <button
             type="submit"
-            className="mt-2 rounded-lg bg-black py-2.5 text-sm font-medium text-white dark:bg-white dark:text-black"
+            disabled={isPending}
+            className="mt-2 rounded-lg bg-black py-2.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
           >
-            Update Password
+            {isPending ? "Updating…" : "Update Password"}
           </button>
-          <p className="text-center text-xs text-black/40 dark:text-white/40">
-            Not yet connected — this is a layout preview.
-          </p>
+        </form>
+
+        <form action={logout} className="mt-8">
+          <button
+            type="submit"
+            className="w-full rounded-lg border border-black/10 py-2.5 text-sm font-medium dark:border-white/10"
+          >
+            Log Out
+          </button>
         </form>
       </main>
     </div>
