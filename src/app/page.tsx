@@ -1,69 +1,118 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import { useMemo, useState } from "react";
+
+import { NavBar } from "@/components/NavBar";
+
+type SessionType = "cash" | "tournament";
+
+type SessionRow = {
+  id: string;
+  type: SessionType;
+  date: string;
+  venue: string;
+  net: number;
+};
+
+// Placeholder rows so the layout can be reviewed before real data is wired up.
+const mockSessions: SessionRow[] = [
+  { id: "1", type: "cash", date: "2026-09-12", venue: "Commerce Casino", net: 340 },
+  { id: "2", type: "tournament", date: "2026-09-10", venue: "The Bike", net: -125 },
+  { id: "3", type: "cash", date: "2026-09-07", venue: "Home Game — Mike's", net: -60 },
+  { id: "4", type: "tournament", date: "2026-09-01", venue: "Commerce Casino", net: 1850 },
+];
+
+const filters = ["all", "cash", "tournament"] as const;
+type Filter = (typeof filters)[number];
 
 export default function Home() {
+  const [filter, setFilter] = useState<Filter>("all");
+
+  const sessions = useMemo(
+    () => mockSessions.filter((s) => filter === "all" || s.type === filter),
+    [filter],
+  );
+
+  const allTimeNet = useMemo(
+    () => mockSessions.reduce((sum, s) => sum + s.net, 0),
+    [],
+  );
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="flex min-h-screen flex-col">
+      <NavBar title="Bankroll" />
+
+      <main className="mx-auto w-full max-w-md flex-1 px-4 pb-24 pt-4">
+        <section className="rounded-xl border border-black/10 p-4 dark:border-white/10">
+          <p className="text-sm text-black/60 dark:text-white/60">All-time net</p>
+          <p
+            className={`text-3xl font-semibold ${
+              allTimeNet >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+            }`}
+          >
+            {allTimeNet >= 0 ? "+" : "-"}${Math.abs(allTimeNet).toLocaleString()}
           </p>
+        </section>
+
+        <div className="mt-4 flex gap-2">
+          {filters.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-full px-3 py-1 text-sm capitalize ${
+                filter === f
+                  ? "bg-black text-white dark:bg-white dark:text-black"
+                  : "bg-black/5 text-black/60 dark:bg-white/10 dark:text-white/60"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        <ul className="mt-4 flex flex-col gap-2">
+          {sessions.map((s) => (
+            <li key={s.id}>
+              <Link
+                href={`/sessions/${s.id}`}
+                className="flex items-center justify-between rounded-lg border border-black/10 p-3 hover:bg-black/[.03] dark:border-white/10 dark:hover:bg-white/[.05]"
+              >
+                <div>
+                  <p className="text-sm font-medium">{s.venue}</p>
+                  <div className="mt-0.5 flex items-center gap-2 text-xs text-black/50 dark:text-white/50">
+                    <span className="rounded bg-black/5 px-1.5 py-0.5 capitalize dark:bg-white/10">
+                      {s.type}
+                    </span>
+                    <span>{s.date}</span>
+                  </div>
+                </div>
+                <span
+                  className={`text-sm font-semibold ${
+                    s.net >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {s.net >= 0 ? "+" : "-"}${Math.abs(s.net).toLocaleString()}
+                </span>
+              </Link>
+            </li>
+          ))}
+
+          {sessions.length === 0 ? (
+            <li className="rounded-lg border border-dashed border-black/10 p-6 text-center text-sm text-black/50 dark:border-white/10 dark:text-white/50">
+              No sessions yet.
+            </li>
+          ) : null}
+        </ul>
       </main>
+
+      <Link
+        href="/sessions/new"
+        className="fixed bottom-6 left-1/2 flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full bg-black text-2xl text-white shadow-lg dark:bg-white dark:text-black"
+        aria-label="Add session"
+      >
+        +
+      </Link>
     </div>
   );
 }
