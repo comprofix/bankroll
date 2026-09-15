@@ -16,12 +16,20 @@ export function NavBar({ title, backHref }: { title: string; backHref?: string }
           <h1 className="text-lg font-semibold">{title}</h1>
         </div>
         {!backHref ? (
-          <Link
-            href="/settings"
-            className="text-sm text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white"
-          >
-            Settings
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/dashboard"
+              className="text-sm text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white"
+            >
+              Stats
+            </Link>
+            <Link
+              href="/settings"
+              className="text-sm text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white"
+            >
+              Settings
+            </Link>
+          </div>
         ) : null}
       </div>
     </header>
