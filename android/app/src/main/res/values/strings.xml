@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Bankroll</string>
+    <string name="title_activity_main">Bankroll</string>
+    <string name="package_name">com.mmckinnon.bankroll</string>
+    <string name="custom_url_scheme">com.mmckinnon.bankroll</string>
+</resources>

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Native Capacitor project — Gradle/Java project, not part of this app's lint surface.
+    "android/**",
   ]),
 ]);
 
