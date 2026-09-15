@@ -16,15 +16,12 @@ services:
     restart: unless-stopped
     depends_on:
       - db
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgres://bankroll:bankroll@db:5432/bankroll
     ports:
       - "3000:3000"
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/.next
-    command: npm run dev
 
 volumes:
   db-data:
