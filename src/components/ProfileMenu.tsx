@@ -55,7 +55,7 @@ export function ProfileMenu() {
             onClick={() => setIsOpen(false)}
             className="block px-4 py-2.5 text-sm text-black/70 hover:bg-black/5 dark:text-white/70 dark:hover:bg-white/10"
           >
-            Change Password
+            Settings
           </Link>
           <form action={logout}>
             <button

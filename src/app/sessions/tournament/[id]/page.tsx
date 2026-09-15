@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { NavBar } from "@/components/NavBar";
 import { TournamentSessionForm } from "@/components/TournamentSessionForm";
-import { getTournamentSessionForEdit } from "@/db/queries";
+import { getTournamentSessionForEdit, getVenuesForUser } from "@/db/queries";
 import { requireUserId } from "@/lib/session";
 
 import { deleteTournamentSession, updateTournamentSession } from "./actions";
@@ -14,7 +14,10 @@ export default async function EditTournamentSession({
 }) {
   const { id } = await params;
   const userId = await requireUserId();
-  const record = await getTournamentSessionForEdit(userId, Number(id));
+  const [record, venues] = await Promise.all([
+    getTournamentSessionForEdit(userId, Number(id)),
+    getVenuesForUser(userId),
+  ]);
   if (!record) notFound();
 
   return (
@@ -24,6 +27,7 @@ export default async function EditTournamentSession({
         <TournamentSessionForm
           action={updateTournamentSession.bind(null, record.id)}
           defaultValues={record}
+          venues={venues}
           submitLabel="Save Changes"
         />
         <form action={deleteTournamentSession.bind(null, record.id)} className="mt-3">

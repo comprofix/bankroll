@@ -4,7 +4,22 @@ import { and, eq, inArray } from "drizzle-orm";
 import { formatDateLocal, formatTimeLocal } from "@/lib/datetime";
 
 import { db } from "./index";
-import { cashRebuys, cashSessions, tournamentRebuys, tournamentSessions } from "./schema";
+import { cashRebuys, cashSessions, tournamentRebuys, tournamentSessions, venues } from "./schema";
+
+export type VenueOption = {
+  id: number;
+  name: string;
+  location: string | null;
+};
+
+export async function getVenuesForUser(userId: number): Promise<VenueOption[]> {
+  const rows = await db
+    .select({ id: venues.id, name: venues.name, location: venues.location })
+    .from(venues)
+    .where(eq(venues.userId, userId));
+
+  return rows.sort((a, b) => a.name.localeCompare(b.name));
+}
 
 export type SessionListRow = {
   id: number;

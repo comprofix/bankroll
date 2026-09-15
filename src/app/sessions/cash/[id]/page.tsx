@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { CashSessionForm } from "@/components/CashSessionForm";
 import { NavBar } from "@/components/NavBar";
-import { getCashSessionForEdit } from "@/db/queries";
+import { getCashSessionForEdit, getVenuesForUser } from "@/db/queries";
 import { requireUserId } from "@/lib/session";
 
 import { deleteCashSession, updateCashSession } from "./actions";
@@ -14,7 +14,10 @@ export default async function EditCashSession({
 }) {
   const { id } = await params;
   const userId = await requireUserId();
-  const record = await getCashSessionForEdit(userId, Number(id));
+  const [record, venues] = await Promise.all([
+    getCashSessionForEdit(userId, Number(id)),
+    getVenuesForUser(userId),
+  ]);
   if (!record) notFound();
 
   return (
@@ -24,6 +27,7 @@ export default async function EditCashSession({
         <CashSessionForm
           action={updateCashSession.bind(null, record.id)}
           defaultValues={record}
+          venues={venues}
           submitLabel="Save Changes"
         />
         <form action={deleteCashSession.bind(null, record.id)} className="mt-3">

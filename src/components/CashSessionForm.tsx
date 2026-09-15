@@ -1,6 +1,9 @@
+import type { VenueOption } from "@/db/queries";
+
 import { FormField } from "./FormField";
 import { inputClass } from "./form-styles";
 import { RebuyList } from "./RebuyList";
+import { VenuePicker } from "./VenuePicker";
 
 export type CashSessionFormValues = {
   datePlayed: string;
@@ -19,10 +22,12 @@ export type CashSessionFormValues = {
 export function CashSessionForm({
   action,
   defaultValues,
+  venues,
   submitLabel = "Save Session",
 }: {
   action: (formData: FormData) => void;
   defaultValues?: Partial<CashSessionFormValues>;
+  venues: VenueOption[];
   submitLabel?: string;
 }) {
   return (
@@ -105,24 +110,11 @@ export function CashSessionForm({
         />
       </FormField>
 
-      <FormField label="Venue Name">
-        <input
-          type="text"
-          name="venueName"
-          required
-          defaultValue={defaultValues?.venueName}
-          className={inputClass}
-        />
-      </FormField>
-
-      <FormField label="Venue Location (optional)">
-        <input
-          type="text"
-          name="venueLocation"
-          defaultValue={defaultValues?.venueLocation}
-          className={inputClass}
-        />
-      </FormField>
+      <VenuePicker
+        venues={venues}
+        defaultName={defaultValues?.venueName}
+        defaultLocation={defaultValues?.venueLocation}
+      />
 
       <FormField label="Notes (optional)">
         <textarea name="notes" rows={3} defaultValue={defaultValues?.notes} className={inputClass} />

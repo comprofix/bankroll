@@ -8,6 +8,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core";
 
@@ -19,6 +20,27 @@ export const users = pgTable("users", {
     .notNull()
     .defaultNow(),
 });
+
+// A saved quick-pick list, not a hard relational link — cash_sessions and
+// tournament_sessions keep their own free-text venue_name/venue_location.
+// Picking a saved venue on a form just pre-fills those text fields, so
+// renaming/deleting a saved venue here never retroactively changes past
+// sessions.
+export const venues = pgTable(
+  "venues",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    userId: bigint("user_id", { mode: "number" })
+      .notNull()
+      .references(() => users.id),
+    name: varchar("name", { length: 150 }).notNull(),
+    location: varchar("location", { length: 150 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("venues_user_name_idx").on(table.userId, table.name)],
+);
 
 export const cashSessions = pgTable(
   "cash_sessions",
