@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { createSessionToken, SESSION_COOKIE, SESSION_DURATION_SECONDS } from "@/lib/auth";
+import { createSessionToken, SESSION_COOKIE, SESSION_COOKIE_SECURE, SESSION_DURATION_SECONDS } from "@/lib/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 
@@ -23,7 +23,7 @@ export async function login(_prevState: string | undefined, formData: FormData) 
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: SESSION_COOKIE_SECURE,
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_DURATION_SECONDS,

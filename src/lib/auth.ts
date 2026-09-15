@@ -30,4 +30,11 @@ export async function verifySessionToken(token: string): Promise<number | null> 
   }
 }
 
-export { SESSION_COOKIE, SESSION_DURATION_SECONDS };
+// Secure by default. Only opt out (env COOKIE_SECURE=false) for local testing
+// over plain HTTP against a host Chromium doesn't treat as a trustworthy
+// origin — e.g. the Android emulator's 10.0.2.2, which (unlike "localhost")
+// gets no secure-cookie exception, so a Secure cookie set over it is silently
+// dropped and every subsequent request looks unauthenticated.
+const SESSION_COOKIE_SECURE = process.env.COOKIE_SECURE !== "false";
+
+export { SESSION_COOKIE, SESSION_COOKIE_SECURE, SESSION_DURATION_SECONDS };
