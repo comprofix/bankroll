@@ -3,6 +3,16 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Dataviz tokens (validated categorical/status palette) */
+  --series-cash: #2a78d6;
+  --series-tournament: #eb6834;
+  --status-good: #0ca30c;
+  --status-critical: #d03b3b;
+  --chart-text-secondary: #52514e;
+  --chart-text-muted: #898781;
+  --chart-gridline: #e1e0d9;
+  --chart-baseline: #c3c2b7;
 }
 
 @theme inline {
@@ -16,6 +26,12 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    --series-cash: #3987e5;
+    --series-tournament: #d95926;
+    --chart-text-secondary: #c3c2b7;
+    --chart-gridline: #2c2c2a;
+    --chart-baseline: #383835;
   }
 }
 
