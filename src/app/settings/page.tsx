@@ -2,7 +2,6 @@
 
 import { useActionState } from "react";
 
-import { logout } from "@/app/login/actions";
 import { FormField } from "@/components/FormField";
 import { inputClass } from "@/components/form-styles";
 import { NavBar } from "@/components/NavBar";
@@ -54,15 +53,6 @@ export default function Settings() {
             className="mt-2 rounded-lg bg-black py-2.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
           >
             {isPending ? "Updating…" : "Update Password"}
-          </button>
-        </form>
-
-        <form action={logout} className="mt-8">
-          <button
-            type="submit"
-            className="w-full rounded-lg border border-black/10 py-2.5 text-sm font-medium dark:border-white/10"
-          >
-            Log Out
           </button>
         </form>
       </main>

@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { ProfileMenu } from "./ProfileMenu";
+
 export function NavBar({ title, backHref }: { title: string; backHref?: string }) {
   return (
     <header className="sticky top-0 z-10 border-b border-black/10 bg-[var(--background)]/90 backdrop-blur dark:border-white/10">
@@ -23,12 +25,7 @@ export function NavBar({ title, backHref }: { title: string; backHref?: string }
             >
               Stats
             </Link>
-            <Link
-              href="/settings"
-              className="text-sm text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white"
-            >
-              Settings
-            </Link>
+            <ProfileMenu />
           </div>
         ) : null}
       </div>
