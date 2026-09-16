@@ -3,6 +3,21 @@ name: Build and Push
 on:
   push:
     branches: [main]
+    # Only what's actually baked into the image — not docker-compose.prod.yml,
+    # .env.prod.example, docs, or the Android project (android/, assets/),
+    # none of which affect the built image.
+    paths:
+      - "src/**"
+      - "public/**"
+      - "drizzle/**"
+      - "drizzle.config.ts"
+      - "Dockerfile"
+      - "docker-entrypoint.sh"
+      - "package.json"
+      - "package-lock.json"
+      - "next.config.ts"
+      - "tsconfig.json"
+      - ".github/workflows/docker-build.yml"
   workflow_dispatch: {}
 
 permissions:
