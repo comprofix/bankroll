@@ -15,6 +15,12 @@ services:
       - internal
     labels:
       - traefik.enable=true
+      # Required because this container is on two networks (proxy + internal,
+      # for the db). Without this, Traefik's Docker provider picks
+      # ambiguously between them on each config refresh — it was
+      # intermittently landing on the internal network's IP, which Traefik
+      # itself has no route to, causing gateway timeouts.
+      - traefik.docker.network=proxy
       - traefik.http.routers.${CONTAINER_NAME}.rule=Host(`${HOSTNAME}`)
       - traefik.http.routers.${CONTAINER_NAME}.entrypoints=https
       - traefik.http.routers.${CONTAINER_NAME}.tls=true
