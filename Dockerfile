@@ -44,6 +44,8 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY drizzle ./drizzle
 COPY src/db ./src/db
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 RUN chown -R nextjs:nodejs /app
 USER nextjs
@@ -51,4 +53,7 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 
-CMD ["npm", "run", "start"]
+# Applies migrations (and seeds the one user, if SEED_EMAIL/PASSWORD are set)
+# before starting the server — both are idempotent, so this is safe on every
+# container start, not just the first. See docker-entrypoint.sh.
+CMD ["./docker-entrypoint.sh"]
