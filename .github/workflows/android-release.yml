@@ -1,0 +1,73 @@
+name: Android Release
+
+# Builds the Capacitor Android app and attaches the signed APK to a GitHub
+# Release, so it's downloadable without ever being committed to git history.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync Capacitor web assets
+        run: npx cap sync android
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Determine version
+        id: vars
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          echo "version_name=${tag#v}" >> "$GITHUB_OUTPUT"
+          echo "version_code=$(git rev-list --count HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Decode signing keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "${{ runner.temp }}/release.keystore.jks"
+
+      - name: Build release APK
+        working-directory: android
+        env:
+          APP_VERSION_NAME: ${{ steps.vars.outputs.version_name }}
+          APP_VERSION_CODE: ${{ steps.vars.outputs.version_code }}
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/release.keystore.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: ./gradlew assembleRelease
+
+      - name: Remove decoded keystore
+        if: always()
+        run: rm -f "${{ runner.temp }}/release.keystore.jks"
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk "bankroll-${{ steps.vars.outputs.version_name }}.apk"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: bankroll-${{ steps.vars.outputs.version_name }}.apk
+          generate_release_notes: true

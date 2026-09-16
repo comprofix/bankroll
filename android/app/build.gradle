@@ -1,5 +1,22 @@
 apply plugin: 'com.android.application'
 
+// Sideloaded personal app, not distributed via Play Store — no per-build
+// version bump ceremony. CI sets APP_VERSION_CODE/APP_VERSION_NAME from the
+// git tag being released; a local `./gradlew assembleDebug` falls back to
+// deriving the same values from git directly so it still works outside CI.
+def resolvedVersionCode = (System.getenv("APP_VERSION_CODE") ?: "git rev-list --count HEAD".execute().text.trim()).toInteger()
+def resolvedVersionName = System.getenv("APP_VERSION_NAME") ?: "git describe --tags --always --dirty".execute(null, rootDir).text.trim()
+
+// The signing key itself is never committed — CI decodes it from the
+// ANDROID_KEYSTORE_BASE64/ANDROID_KEYSTORE_PASSWORD repo secrets into
+// ANDROID_KEYSTORE_PATH before invoking Gradle. Locally, these env vars are
+// simply unset, so both debug and release fall back to Android's normal
+// default signing (auto-generated debug key; release comes out unsigned,
+// which is fine since release APKs are only ever built by CI).
+def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+def keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+def hasReleaseSigning = keystorePath != null && keystorePassword != null && file(keystorePath).exists()
+
 android {
     namespace = "com.mmckinnon.bankroll"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +24,8 @@ android {
         applicationId "com.mmckinnon.bankroll"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode resolvedVersionCode
+        versionName resolvedVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +33,31 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    if (hasReleaseSigning) {
+        signingConfigs {
+            release {
+                storeFile file(keystorePath)
+                storePassword keystorePassword
+                keyAlias 'bankroll'
+                keyPassword keystorePassword
+            }
+        }
+    }
     buildTypes {
         release {
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            // Same key as release when available, so a CI-signed release
+            // APK can install over a locally-built debug one without an
+            // uninstall — see the note above resolvedVersionCode.
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
