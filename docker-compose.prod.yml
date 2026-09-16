@@ -1,0 +1,40 @@
+services:
+  bankroll-app:
+    container_name: ${CONTAINER_NAME}
+    image: ghcr.io/comprofix/bankroll:${IMAGE_TAG}
+    restart: unless-stopped
+    depends_on:
+      - bankroll-db
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://bankroll:${POSTGRES_PASSWORD}@bankroll-db:5432/bankroll
+    networks:
+      - proxy
+      - internal
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.${CONTAINER_NAME}.rule=Host(`${HOSTNAME}`)
+      - traefik.http.routers.${CONTAINER_NAME}.entrypoints=https
+      - traefik.http.routers.${CONTAINER_NAME}.tls=true
+      - traefik.http.services.${CONTAINER_NAME}.loadbalancer.server.port=3000
+
+  bankroll-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bankroll
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: bankroll
+    volumes:
+      - bankroll-db-data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+networks:
+  proxy:
+    external: true
+  internal:
+
+volumes:
+  bankroll-db-data:
