@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 
 import { NavBar } from "@/components/NavBar";
+import { useIsNativeApp } from "@/lib/capacitor";
 
 const settingsLinks = [
   { href: "/settings/password", label: "Change Password" },
@@ -8,11 +11,14 @@ const settingsLinks = [
 ];
 
 export default function Settings() {
+  const isNative = useIsNativeApp();
+  const links = isNative ? [...settingsLinks, { href: "/settings/server", label: "Server" }] : settingsLinks;
+
   return (
     <div className="flex min-h-screen flex-col">
       <NavBar title="Settings" backHref="/" />
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-3 px-4 pt-8">
-        {settingsLinks.map((link) => (
+        {links.map((link) => (
           <Link
             key={link.href}
             href={link.href}

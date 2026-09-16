@@ -1,20 +1,16 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-// This app is server-rendered (Server Actions, auth cookies, live DB access),
-// so there's nothing to statically bundle — the native shell just navigates
-// to the live URL below. webDir is required by the CapacitorConfig type but
-// unused in this mode.
-//
-// Points at the real production deployment over HTTPS. No cleartext flag —
-// that was only needed for local emulator testing against 10.0.2.2 (plain
-// HTTP), and Android's default cleartext block is exactly what we want here.
+// No fixed server.url — this is a generic client, not tied to one
+// deployment. On first launch it loads the bundled onboarding page
+// (capacitor-www/index.html), which asks for a server URL, hands it to the
+// native ServerConfigPlugin, and MainActivity rebuilds the bridge's
+// CapConfig around it before the WebView initializes (see MainActivity.java
+// and ServerConfigPlugin.java). On later launches, the saved URL is read
+// the same way and the bundled page is skipped entirely.
 const config: CapacitorConfig = {
   appId: "com.mmckinnon.bankroll",
   appName: "Bankroll",
-  webDir: "public",
-  server: {
-    url: "https://bankroll.comprofix.com",
-  },
+  webDir: "capacitor-www",
 };
 
 export default config;

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Bankroll</title>
+<style>
+  :root { color-scheme: light dark; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #ffffff;
+    color: #171717;
+  }
+  @media (prefers-color-scheme: dark) {
+    html, body { background: #0a0a0a; color: #ededed; }
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+  .card { max-width: 360px; width: 100%; }
+  h1 { font-size: 20px; margin: 0 0 8px; }
+  p.hint { font-size: 13px; opacity: 0.6; margin: 0 0 24px; line-height: 1.4; }
+  label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(128, 128, 128, 0.3);
+    background: transparent;
+    color: inherit;
+    font-size: 15px;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+  }
+  input:focus { outline: none; border-color: rgba(128, 128, 128, 0.6); }
+  p.error {
+    color: #e34948;
+    font-size: 13px;
+    min-height: 18px;
+    margin: 0 0 16px;
+  }
+  button {
+    width: 100%;
+    padding: 11px;
+    border-radius: 8px;
+    border: none;
+    background: #171717;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  @media (prefers-color-scheme: dark) {
+    button { background: #ffffff; color: #0a0a0a; }
+  }
+  button:disabled { opacity: 0.5; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Connect to your Bankroll server</h1>
+    <p class="hint">Enter the address of your own Bankroll deployment, e.g. https://bankroll.example.com</p>
+    <form id="connect-form">
+      <label for="url">Server URL</label>
+      <input id="url" name="url" type="url" placeholder="https://bankroll.example.com" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url" required />
+      <p class="error" id="error"></p>
+      <button id="submit" type="submit">Connect</button>
+    </form>
+  </div>
+
+  <script>
+    (function () {
+      function normalize(raw) {
+        var trimmed = (raw || "").trim();
+        if (!trimmed) return null;
+        if (!/^https?:\/\//i.test(trimmed)) {
+          trimmed = "https://" + trimmed;
+        }
+        try {
+          var parsed = new URL(trimmed);
+          if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+          return parsed.origin;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function ready(fn) {
+        if (document.readyState !== "loading") fn();
+        else document.addEventListener("DOMContentLoaded", fn);
+      }
+
+      ready(function () {
+        var form = document.getElementById("connect-form");
+        var input = document.getElementById("url");
+        var errorEl = document.getElementById("error");
+        var submitBtn = document.getElementById("submit");
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          var normalized = normalize(input.value);
+          if (!normalized) {
+            errorEl.textContent = "Enter a valid URL, e.g. https://bankroll.example.com";
+            return;
+          }
+          errorEl.textContent = "";
+
+          var plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.ServerConfig;
+          if (!plugin) {
+            errorEl.textContent = "Native bridge unavailable — this page only works inside the app.";
+            return;
+          }
+
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Connecting…";
+          plugin
+            .connect({ url: normalized })
+            .catch(function (err) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = "Connect";
+              errorEl.textContent = "Couldn't save that — " + (err && err.message ? err.message : "try again.");
+            });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
