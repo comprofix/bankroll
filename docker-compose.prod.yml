@@ -5,10 +5,11 @@ services:
     restart: unless-stopped
     depends_on:
       - bankroll-db
-    env_file:
-      - .env
     environment:
       DATABASE_URL: postgres://bankroll:${POSTGRES_PASSWORD}@bankroll-db:5432/bankroll
+      SESSION_SECRET: ${SESSION_SECRET}
+      SEED_EMAIL: ${SEED_EMAIL}
+      SEED_PASSWORD: ${SEED_PASSWORD}
     networks:
       - proxy
       - internal
