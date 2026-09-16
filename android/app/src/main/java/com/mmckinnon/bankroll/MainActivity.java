@@ -5,8 +5,6 @@ import android.os.Bundle;
 import android.webkit.WebView;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.webkit.WebSettingsCompat;
-import androidx.webkit.WebViewFeature;
 
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.CapConfig;
@@ -40,13 +38,15 @@ public class MainActivity extends BridgeActivity {
 
         super.onCreate(savedInstanceState);
 
-        // The app theme (styles.xml) follows the system day/night setting, but
-        // Android's WebView does not automatically darken page content based on
-        // prefers-color-scheme unless explicitly enabled here.
-        WebView webView = getBridge().getWebView();
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-            WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true);
-        }
+        // Deliberately NOT enabling WebView's algorithmic darkening here: the
+        // app theme (styles.xml) already follows the system day/night
+        // setting, which is what makes our CSS's prefers-color-scheme: dark
+        // match correctly — that's unrelated to algorithmic darkening.
+        // Algorithmic darkening is a color-transform filter for pages with
+        // no native dark styling; turning it on here stacked an extra
+        // desaturation pass on top of our already-correct dark CSS, which
+        // is why accent colors (e.g. the profit green) looked dull compared
+        // to the same page in a real browser.
 
         // Only relevant once a real server URL is configured — the bundled
         // onboarding page can't itself fail to load. Native dialog rather
