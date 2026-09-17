@@ -70,3 +70,7 @@ Download the latest signed APK from [Releases](https://github.com/comprofix/bank
 New releases are cut by pushing a `vX.Y.Z` git tag, which builds and signs the APK, publishes it as a GitHub Release asset, and tags the matching Docker image — see `.github/workflows/android-release.yml`.
 
 > **Forking this repo?** The release workflow needs its own signing key — it won't work with mine. Generate a keystore (`keytool -genkeypair -keystore release.keystore.jks -alias bankroll -keyalg RSA -keysize 2048 -validity 36500`), base64-encode it, and add it as the `ANDROID_KEYSTORE_BASE64` and `ANDROID_KEYSTORE_PASSWORD` repo secrets. Don't commit the keystore itself — CI decodes it from the secret at build time.
+
+## License
+
+[MIT](LICENSE.md) — do whatever you want with this, including running it, modifying it, and redistributing it. If you do build on it, a credit or link back to this repo is appreciated, but isn't required.
