@@ -4,6 +4,8 @@ A personal poker bankroll tracker. Log cash game and tournament sessions, see yo
 
 Single-user by design — there's no signup flow, no multi-tenant anything. It's built to run as one small Docker stack you own.
 
+This repo is meant to be self-hosted by anyone: pull the public image, run it on your own server, install the same Android APK and point it at your own instance. Fork it and change whatever you want to fit how you actually play — nothing here is tied to my deployment.
+
 ## Screenshots
 
 | Home | Edit Session |
