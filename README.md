@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bankroll
 
-## Getting Started
+A personal poker bankroll tracker. Log cash game and tournament sessions, see your all-time and by-venue numbers, and check the app from a phone via an Android client that connects to your own self-hosted server.
 
-First, run the development server:
+Single-user by design — there's no signup flow, no multi-tenant anything. It's built to run as one small Docker stack you own.
+
+## Screenshots
+
+| Home | Edit Session |
+| --- | --- |
+| ![Home screen — session list with all-time net total](screenshots/mainscreen.png) | ![Edit Cash Session form](screenshots/session.png) |
+
+| Stats — profit & totals | Stats — mix, venues, best/worst |
+| --- | --- |
+| ![Profit-over-time chart and all-time totals table](screenshots/stats-1.png) | ![Session mix, win rate, by-venue breakdown, best/worst sessions](screenshots/stats-2.png) |
+
+## Features
+
+- **Cash sessions** — date/time (with overnight rollover handled automatically), blinds, starting buy-in plus any number of rebuys, cash-out, venue, notes. Net profit and $/hour computed automatically.
+- **Tournament sessions** — tournament name, date, buy-in plus re-entries, finish position, payout. Net profit and ROI computed automatically.
+- **Venues** — save venues once in Settings, then pick them from a dropdown on session forms. Deleting a venue never rewrites history — past sessions keep the name they were logged with.
+- **Stats dashboard** — cumulative profit chart (cash vs. tournament), all-time totals (buy-in, winnings, net, hours, $/hour, ROI, win %), session mix, win rate, a by-venue breakdown, and best/worst sessions.
+- **Dark mode**, following the system theme.
+- **Android app** — a thin native wrapper (Capacitor) around the same web app. On first launch it asks for your server's URL rather than being built against a fixed address, so the same APK works against anyone's own deployment.
+
+## Tech stack
+
+- [Next.js](https://nextjs.org) (App Router) + TypeScript, Server Actions for all mutations
+- [Drizzle ORM](https://orm.drizzle.team) + PostgreSQL
+- Hand-rolled single-user auth: bcrypt password hashing, a signed JWT session cookie
+- Tailwind CSS v4
+- [Capacitor](https://capacitorjs.com) for the Android client
+
+## Running it yourself
+
+Requires Docker.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/comprofix/bankroll.git
+cd bankroll
+cp .env.example .env   # fill in SESSION_SECRET, SEED_EMAIL, SEED_PASSWORD
+docker compose up -d
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+That starts the app and its own Postgres instance, runs migrations, and seeds your one user account automatically. Open `http://localhost:3000` and log in with the `SEED_EMAIL`/`SEED_PASSWORD` you set.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+For local development without Docker: `npm install`, point `DATABASE_URL` at a Postgres instance, `npm run db:migrate`, `npm run db:seed`, `npm run dev`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploying
 
-## Learn More
+Pre-built images are published to `ghcr.io/comprofix/bankroll` on every push to `main`, and tagged `vX.Y.Z` whenever an Android release is cut (see below) so a given APK version and its matching server image line up.
 
-To learn more about Next.js, take a look at the following resources:
+`docker-compose.prod.yml` is the reference production stack — Traefik-labeled, its own isolated Postgres, no build step, just `${VAR}` substitutions for secrets (see `.env.prod.example` for what to set). It's built to be deployed via Portainer pulling the compose file straight from this repo, but works with any Traefik-fronted Docker host. Migrations and seeding run automatically on every container start — there's no manual deploy step beyond pulling the new image.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Android app
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Download the latest signed APK from [Releases](https://github.com/comprofix/bankroll/releases) and sideload it. On first launch, it'll ask for your server's URL (e.g. `https://bankroll.example.com`) — enter the address of your own deployment and it connects from there. Nothing is hardcoded to any particular server, so the same APK works for anyone running their own instance.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+New releases are cut by pushing a `vX.Y.Z` git tag, which builds and signs the APK, publishes it as a GitHub Release asset, and tags the matching Docker image — see `.github/workflows/android-release.yml`.
