@@ -55,6 +55,8 @@ Pre-built images are published to `ghcr.io/comprofix/bankroll` on every push to 
 - **Via Portainer**, pulling this compose file straight from the repo: set the variables under the stack's "Environment variables" UI.
 - **Manually, on any Traefik-fronted Docker host**: copy `.env.prod.example` to `.env` next to `docker-compose.prod.yml`, fill it in, and run `docker compose -f docker-compose.prod.yml up -d`. Compose reads that `.env` automatically for the substitutions — no other setup needed.
 
+> **Traefik network name:** the compose file assumes your external Traefik network is called `proxy` (`networks.proxy.external: true`, and the `traefik.docker.network=proxy` label). If your Traefik setup uses a different network name, update both of those to match — otherwise Traefik won't be able to route to the container. This app also sits on a second, internal-only network for its own Postgres instance; the `traefik.docker.network` label is what tells Traefik which of the two networks to actually use (without it, Traefik picks ambiguously between them and you'll see intermittent gateway timeouts).
+
 ## Android app
 
 Download the latest signed APK from [Releases](https://github.com/comprofix/bankroll/releases) and sideload it. On first launch, it'll ask for your server's URL (e.g. `https://bankroll.example.com`) — enter the address of your own deployment and it connects from there. Nothing is hardcoded to any particular server, so the same APK works for anyone running their own instance.
