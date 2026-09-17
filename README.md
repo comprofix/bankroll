@@ -44,6 +44,8 @@ docker compose up -d
 
 That starts the app and its own Postgres instance, runs migrations, and seeds your one user account automatically. Open `http://localhost:3000` and log in with the `SEED_EMAIL`/`SEED_PASSWORD` you set.
 
+> **This is the only way to create your account.** There's no signup page, ever — by design, for a single-user app. To change your credentials later, log in and use the in-app change-password page rather than re-seeding: seeding only creates the account if none exists yet, so it silently no-ops on every start after the first.
+
 For local development without Docker: `npm install`, point `DATABASE_URL` at a Postgres instance, `npm run db:migrate`, `npm run db:seed`, `npm run dev`.
 
 ## Deploying
@@ -57,8 +59,12 @@ Pre-built images are published to `ghcr.io/comprofix/bankroll` on every push to 
 
 > **Traefik network name:** the compose file assumes your external Traefik network is called `proxy` (`networks.proxy.external: true`, and the `traefik.docker.network=proxy` label). If your Traefik setup uses a different network name, update both of those to match — otherwise Traefik won't be able to route to the container. This app also sits on a second, internal-only network for its own Postgres instance; the `traefik.docker.network` label is what tells Traefik which of the two networks to actually use (without it, Traefik picks ambiguously between them and you'll see intermittent gateway timeouts).
 
+> **HTTPS is required.** The session cookie is `Secure` by default, so browsers will silently refuse to send it back over plain HTTP — login will appear to succeed, then bounce you back to `/login` on the very next navigation. Make sure whatever's in front of this (Traefik, in the reference compose file) terminates real TLS. The only exception is `COOKIE_SECURE=false`, meant strictly for local non-HTTPS testing (e.g. an Android emulator) — never set it on a real deployment.
+
 ## Android app
 
 Download the latest signed APK from [Releases](https://github.com/comprofix/bankroll/releases) and sideload it. On first launch, it'll ask for your server's URL (e.g. `https://bankroll.example.com`) — enter the address of your own deployment and it connects from there. Nothing is hardcoded to any particular server, so the same APK works for anyone running their own instance.
 
 New releases are cut by pushing a `vX.Y.Z` git tag, which builds and signs the APK, publishes it as a GitHub Release asset, and tags the matching Docker image — see `.github/workflows/android-release.yml`.
+
+> **Forking this repo?** The release workflow needs its own signing key — it won't work with mine. Generate a keystore (`keytool -genkeypair -keystore release.keystore.jks -alias bankroll -keyalg RSA -keysize 2048 -validity 36500`), base64-encode it, and add it as the `ANDROID_KEYSTORE_BASE64` and `ANDROID_KEYSTORE_PASSWORD` repo secrets. Don't commit the keystore itself — CI decodes it from the secret at build time.
