@@ -50,7 +50,10 @@ For local development without Docker: `npm install`, point `DATABASE_URL` at a P
 
 Pre-built images are published to `ghcr.io/comprofix/bankroll` on every push to `main`, and tagged `vX.Y.Z` whenever an Android release is cut (see below) so a given APK version and its matching server image line up.
 
-`docker-compose.prod.yml` is the reference production stack — Traefik-labeled, its own isolated Postgres, no build step, just `${VAR}` substitutions for secrets (see `.env.prod.example` for what to set). It's built to be deployed via Portainer pulling the compose file straight from this repo, but works with any Traefik-fronted Docker host. Migrations and seeding run automatically on every container start — there's no manual deploy step beyond pulling the new image.
+`docker-compose.prod.yml` is the reference production stack — Traefik-labeled, its own isolated Postgres, no build step, just `${VAR}` substitutions for secrets (see `.env.prod.example` for what to set). Migrations and seeding run automatically on every container start — there's no manual deploy step beyond pulling the new image.
+
+- **Via Portainer**, pulling this compose file straight from the repo: set the variables under the stack's "Environment variables" UI.
+- **Manually, on any Traefik-fronted Docker host**: copy `.env.prod.example` to `.env` next to `docker-compose.prod.yml`, fill it in, and run `docker compose -f docker-compose.prod.yml up -d`. Compose reads that `.env` automatically for the substitutions — no other setup needed.
 
 ## Android app
 

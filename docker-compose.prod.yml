@@ -1,3 +1,18 @@
+# Two ways to supply the ${VAR} values used throughout this file:
+#
+# - Portainer git-stack deploys: set them under the stack's "Environment
+#   variables" UI. There's no literal .env file on disk in that flow.
+#
+# - Manual `docker compose` on any other Docker host: create a `.env` file
+#   next to this one (e.g. `cp .env.prod.example .env` and fill it in), then
+#   run `docker compose -f docker-compose.prod.yml up -d`. Compose reads a
+#   same-directory .env automatically for ${VAR} substitution — this is
+#   Compose's own built-in behavior, not something this file has to opt
+#   into, so no env_file: directive is needed (and deliberately isn't used
+#   here — it would inject the same values a second time as literal
+#   container env vars, and if ever left active it silently breaks
+#   Portainer deploys, which have no .env file to point it at).
+
 services:
   bankroll-app:
     container_name: ${CONTAINER_NAME}
