@@ -16,7 +16,7 @@
 services:
   bankroll-app:
     container_name: ${CONTAINER_NAME}
-    image: ghcr.io/comprofix/bankroll:${IMAGE_TAG}
+    image: ${IMAGE_NAME:-ghcr.io/comprofix/bankroll}:${IMAGE_TAG}
     restart: unless-stopped
     depends_on:
       - bankroll-db
@@ -25,6 +25,13 @@ services:
       SESSION_SECRET: ${SESSION_SECRET}
       SEED_EMAIL: ${SEED_EMAIL}
       SEED_PASSWORD: ${SEED_PASSWORD}
+    # No ports: mapping by default -- this file assumes Traefik reaches the
+    # container over the `proxy` Docker network, not a published host port.
+    # If you're not running Traefik (or any reverse proxy) at all, uncomment
+    # this to reach the app directly, and put your own TLS in front of it
+    # separately, or accept plain HTTP for local/trusted-network use only:
+    # ports:
+    #   - "3000:3000"
     networks:
       - proxy
       - internal
