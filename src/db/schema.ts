@@ -51,14 +51,16 @@ export const cashSessions = pgTable(
       .references(() => users.id),
     // date_played is derived from startDatetime, not stored separately
     startDatetime: timestamp("start_datetime", { withTimezone: true }).notNull(),
-    endDatetime: timestamp("end_datetime", { withTimezone: true }).notNull(),
+    // Null end_datetime means the session is still in progress (live timer).
+    // cashout is only known once it ends, so it's null until then too.
+    endDatetime: timestamp("end_datetime", { withTimezone: true }),
     smallBlind: numeric("small_blind", { precision: 10, scale: 2 }).notNull(),
     bigBlind: numeric("big_blind", { precision: 10, scale: 2 }).notNull(),
     startingBuyin: numeric("starting_buyin", {
       precision: 10,
       scale: 2,
     }).notNull(),
-    cashout: numeric("cashout", { precision: 10, scale: 2 }).notNull(),
+    cashout: numeric("cashout", { precision: 10, scale: 2 }),
     venueName: varchar("venue_name", { length: 150 }).notNull(),
     venueLocation: varchar("venue_location", { length: 150 }),
     notes: text("notes"),

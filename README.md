@@ -19,6 +19,7 @@ This repo is meant to be self-hosted by anyone: pull the public image, run it on
 ## Features
 
 - **Cash sessions** — date/time (with overnight rollover handled automatically), blinds, starting buy-in plus any number of rebuys, cash-out, venue, notes. Net profit and $/hour computed automatically.
+- **Live sessions** — leave the times blank when you sit down and tap **Start Session** to start a timer. Add rebuys as you play, then **Finish Session** with your cash-out (the end time defaults to now, or type one). Live sessions show at the top of the list and don't count towards any stats until they're finished. Backfilling a past session with start/end times and a cash-out still works as before.
 - **Tournament sessions** — tournament name, date, buy-in plus re-entries, finish position, payout. Net profit and ROI computed automatically.
 - **Venues** — save venues once in Settings, then pick them from a dropdown on session forms. Deleting a venue never rewrites history — past sessions keep the name they were logged with.
 - **Stats dashboard** — cumulative profit chart (cash vs. tournament), all-time totals (buy-in, winnings, net, hours, $/hour, ROI, win %), session mix, win rate, a by-venue breakdown, and best/worst sessions.
