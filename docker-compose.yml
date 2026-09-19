@@ -20,6 +20,8 @@ services:
       - .env
     environment:
       DATABASE_URL: postgres://bankroll:bankroll@db:5432/bankroll
+      # Server timezone for session times (IANA name). Defaults to UTC.
+      TZ: ${TZ:-UTC}
     ports:
       - "3000:3000"
 

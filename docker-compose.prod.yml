@@ -25,6 +25,10 @@ services:
       SESSION_SECRET: ${SESSION_SECRET}
       SEED_EMAIL: ${SEED_EMAIL}
       SEED_PASSWORD: ${SEED_PASSWORD}
+      # The server's timezone. Session times are stored and displayed as
+      # wall-clock time in this zone, so set it to where you play (an IANA
+      # name, e.g. Australia/Brisbane). Defaults to UTC.
+      TZ: ${TZ:-UTC}
     # No ports: mapping by default -- this file assumes Traefik reaches the
     # container over the `proxy` Docker network, not a published host port.
     # If you're not running Traefik (or any reverse proxy) at all, uncomment

@@ -130,6 +130,26 @@ docker compose -f docker-compose.prod.yml up -d
 
 > **HTTPS is required** for any real deployment. The session cookie is `Secure` by default, so browsers will silently refuse to send it back over plain HTTP — login will appear to succeed, then bounce you back to `/login` on the very next navigation. Make sure whatever's in front of this terminates real TLS. `COOKIE_SECURE=false` is strictly for local testing (see "Local development" above) — never set it on a real deployment.
 
+## Timezone
+
+Session start and end times are stored and shown as wall-clock time in the **server's** timezone, which is UTC inside the container unless you set `TZ`. Set it to where you play, as an [IANA name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `Australia/Brisbane`, `America/Los_Angeles`):
+
+- **Portainer**: add `TZ` under the stack's "Environment variables".
+- **Manual / local**: add `TZ=Australia/Brisbane` to your `.env` (both compose files pass it through; it defaults to `UTC`).
+
+On a fresh install, just set it before you log your first session and you're done.
+
+> **Already have sessions? Shift them when you change `TZ`.** Times you logged while the server was on UTC are stored as your wall-clock time labelled as UTC. Switch the server to another zone without touching that data and every existing session displays hours off — and the date changes for anything late enough in the day. Run this once, at the same time you set `TZ` (swap in your own zone in both places it appears — it's the zone you're setting `TZ` to):
+>
+> ```bash
+> docker compose -f docker-compose.prod.yml exec bankroll-db psql -U bankroll -c "
+> UPDATE cash_sessions SET
+>   start_datetime = (start_datetime AT TIME ZONE 'UTC') AT TIME ZONE 'Australia/Brisbane',
+>   end_datetime   = (end_datetime   AT TIME ZONE 'UTC') AT TIME ZONE 'Australia/Brisbane';"
+> ```
+>
+> (For the local stack, use `docker compose exec db psql ...` instead.) Tournament dates are plain dates with no timezone, so they don't need it. Back up first if the data matters, and don't run it twice.
+
 ## Android app
 
 Download the latest signed APK from [Releases](https://github.com/comprofix/bankroll/releases) and sideload it. On first launch, it'll ask for your server's URL (e.g. `https://bankroll.example.com`) — enter the address of your own deployment and it connects from there. Nothing is hardcoded to any particular server, so the same APK works for anyone running their own instance.
