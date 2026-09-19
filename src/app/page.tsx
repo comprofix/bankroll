@@ -8,7 +8,7 @@ import { requireUserId } from "@/lib/session";
 export default async function Home() {
   const userId = await requireUserId();
   const sessions = await getSessionListForUser(userId);
-  const allTimeNet = sessions.reduce((sum, s) => sum + s.net, 0);
+  const allTimeNet = sessions.reduce((sum, s) => (s.active ? sum : sum + s.net), 0);
 
   return (
     <div className="flex min-h-screen flex-col">

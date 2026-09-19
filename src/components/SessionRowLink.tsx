@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import type { SessionListRow } from "@/db/queries";
 
+import { SessionTimer } from "./SessionTimer";
+
 export function SessionRowLink({ session }: { session: SessionListRow }) {
   return (
     <Link
@@ -15,15 +17,31 @@ export function SessionRowLink({ session }: { session: SessionListRow }) {
             {session.type}
           </span>
           <span>{session.date}</span>
+          {session.active ? (
+            <span className="rounded bg-emerald-600/15 px-1.5 py-0.5 font-medium text-emerald-700 dark:text-emerald-400">
+              Live
+            </span>
+          ) : null}
         </div>
       </div>
-      <span
-        className={`text-sm font-semibold ${
-          session.net >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
-        }`}
-      >
-        {session.net >= 0 ? "+" : "-"}${Math.abs(session.net).toLocaleString()}
-      </span>
+      {session.active ? (
+        <div className="text-right">
+          <p className="text-sm text-black/50 dark:text-white/50">In progress</p>
+          {session.startedAt ? (
+            <p className="mt-0.5 text-sm font-semibold">
+              <SessionTimer startedAt={session.startedAt} />
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <span
+          className={`text-sm font-semibold ${
+            session.net >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+          }`}
+        >
+          {session.net >= 0 ? "+" : "-"}${Math.abs(session.net).toLocaleString()}
+        </span>
+      )}
     </Link>
   );
 }

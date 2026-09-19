@@ -1,7 +1,7 @@
 import "server-only";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 
-import { formatDateLocal, formatTimeLocal } from "@/lib/datetime";
+import { formatDateLocal, formatLocalIso, formatTimeLocal } from "@/lib/datetime";
 
 import { db } from "./index";
 import { cashRebuys, cashSessions, tournamentRebuys, tournamentSessions, venues } from "./schema";
@@ -26,7 +26,12 @@ export type SessionListRow = {
   type: "cash" | "tournament";
   date: string;
   venue: string;
+  // Live cash sessions have no result yet; net is 0 and must not be counted
+  // in any total (callers check `active`).
   net: number;
+  active: boolean;
+  // Only set for live sessions: wall-clock start, for the running timer.
+  startedAt?: string;
 };
 
 type EnrichedCashSession = {
@@ -60,19 +65,41 @@ async function getEnrichedCashSessions(userId: number): Promise<EnrichedCashSess
     rebuyTotals.set(r.cashSessionId, (rebuyTotals.get(r.cashSessionId) ?? 0) + Number(r.amount));
   }
 
-  return cash.map((s) => {
+  // Live sessions (no end time / cash-out yet) are left out: they have no
+  // result to count until they're finished.
+  return cash.flatMap((s) => {
+    if (!s.endDatetime || s.cashout === null) return [];
     const totalBuyin = Number(s.startingBuyin) + (rebuyTotals.get(s.id) ?? 0);
     const result = Number(s.cashout);
-    return {
-      id: s.id,
-      date: formatDateLocal(s.startDatetime),
-      venue: s.venueName,
-      totalBuyin,
-      result,
-      net: result - totalBuyin,
-      hours: (s.endDatetime.getTime() - s.startDatetime.getTime()) / (1000 * 60 * 60),
-    };
+    return [
+      {
+        id: s.id,
+        date: formatDateLocal(s.startDatetime),
+        venue: s.venueName,
+        totalBuyin,
+        result,
+        net: result - totalBuyin,
+        hours: (s.endDatetime.getTime() - s.startDatetime.getTime()) / (1000 * 60 * 60),
+      },
+    ];
   });
+}
+
+async function getActiveCashSessions(userId: number): Promise<SessionListRow[]> {
+  const rows = await db
+    .select()
+    .from(cashSessions)
+    .where(and(eq(cashSessions.userId, userId), isNull(cashSessions.endDatetime)));
+
+  return rows.map((s) => ({
+    id: s.id,
+    type: "cash" as const,
+    date: formatDateLocal(s.startDatetime),
+    venue: s.venueName,
+    net: 0,
+    active: true,
+    startedAt: formatLocalIso(s.startDatetime),
+  }));
 }
 
 async function getEnrichedTournamentSessions(userId: number): Promise<EnrichedTournamentSession[]> {
@@ -105,23 +132,33 @@ async function getEnrichedTournamentSessions(userId: number): Promise<EnrichedTo
 }
 
 export async function getSessionListForUser(userId: number): Promise<SessionListRow[]> {
-  const [cash, tournaments] = await Promise.all([
+  const [cash, tournaments, active] = await Promise.all([
     getEnrichedCashSessions(userId),
     getEnrichedTournamentSessions(userId),
+    getActiveCashSessions(userId),
   ]);
 
-  const rows: SessionListRow[] = [
-    ...cash.map((s) => ({ id: s.id, type: "cash" as const, date: s.date, venue: s.venue, net: s.net })),
+  const finished: SessionListRow[] = [
+    ...cash.map((s) => ({
+      id: s.id,
+      type: "cash" as const,
+      date: s.date,
+      venue: s.venue,
+      net: s.net,
+      active: false,
+    })),
     ...tournaments.map((s) => ({
       id: s.id,
       type: "tournament" as const,
       date: s.date,
       venue: s.venue,
       net: s.net,
+      active: false,
     })),
-  ];
+  ].sort((a, b) => (a.date < b.date ? 1 : -1));
 
-  return rows.sort((a, b) => (a.date < b.date ? 1 : -1));
+  // Live sessions always sit at the top.
+  return [...active, ...finished];
 }
 
 export async function getCashSessionForEdit(userId: number, id: number) {
@@ -135,14 +172,17 @@ export async function getCashSessionForEdit(userId: number, id: number) {
 
   return {
     id: session.id,
+    isActive: session.endDatetime === null,
+    startedAt: formatLocalIso(session.startDatetime),
     datePlayed: formatDateLocal(session.startDatetime),
     timeStarted: formatTimeLocal(session.startDatetime),
-    timeEnded: formatTimeLocal(session.endDatetime),
+    timeEnded: session.endDatetime ? formatTimeLocal(session.endDatetime) : "",
     smallBlind: session.smallBlind,
     bigBlind: session.bigBlind,
     startingBuyin: session.startingBuyin,
+    rebuys: rebuys.map((r) => ({ id: r.id, amount: r.amount })),
     rebuyAmounts: rebuys.map((r) => r.amount),
-    cashout: session.cashout,
+    cashout: session.cashout ?? "",
     venueName: session.venueName,
     venueLocation: session.venueLocation ?? "",
     notes: session.notes ?? "",
@@ -287,13 +327,21 @@ export async function getDashboardData(userId: number): Promise<DashboardData> {
     .sort((a, b) => b.net - a.net);
 
   const combined: SessionListRow[] = [
-    ...cash.map((s) => ({ id: s.id, type: "cash" as const, date: s.date, venue: s.venue, net: s.net })),
+    ...cash.map((s) => ({
+      id: s.id,
+      type: "cash" as const,
+      date: s.date,
+      venue: s.venue,
+      net: s.net,
+      active: false,
+    })),
     ...tournaments.map((s) => ({
       id: s.id,
       type: "tournament" as const,
       date: s.date,
       venue: s.venue,
       net: s.net,
+      active: false,
     })),
   ];
   const bySortedNet = [...combined].sort((a, b) => b.net - a.net);
